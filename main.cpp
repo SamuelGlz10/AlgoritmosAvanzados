@@ -1,130 +1,63 @@
+/*
+Samuel Gonzalez Vazquez 
+A01412958
+Algoritmos Avanzados
+*/
 #include <iostream>
-#include <cstring>
+#include <vector>
+#include <algorithm>
 
-// Linked List node
-struct node {
-    const char* key;   // Key is a constant string
-    const char* value; // Value is a constant string
-    struct node* next;
-};
+using namespace std;
 
-// Like constructor
-void setNode(struct node* node, const char* key, const char* value) {
-    node->key = key;
-    node->value = value;
-    node->next = nullptr;
-    return;
+/**
+ * Función para comparar sufijos.
+ * @param a: Primer sufijo.
+ * @param b: Segundo sufijo.
+ * @return true si a es menor que b, false en caso contrario.
+ */
+bool compareSuffixes(const pair<string, int>& a, const pair<string, int>& b) {
+    return a.first < b.first;
 }
 
-struct hashMap {
-    int numOfElements, capacity;
-    struct node** arr;
-};
+/**
+ * Función para calcular el Suffix Array de un string.
+ * @param s: El string de entrada.
+ * @return Un vector con los índices de los sufijos ordenados.
+ */
+vector<int> computeSuffixArray(const string& s) {
+    int n = s.length();
+    vector<pair<string, int>> suffixes;
 
-// Like constructor
-void initializeHashMap(struct hashMap* mp) {
-    mp->capacity = 100;
-    mp->numOfElements = 0;
-    mp->arr = (struct node**)malloc(sizeof(struct node*) * mp->capacity);
-    memset(mp->arr, 0, sizeof(struct node*) * mp->capacity); // Initialize to nullptr
-    return;
-}
-
-int hashFunction(struct hashMap* mp, const char* key) {
-    int bucketIndex;
-    int sum = 0, factor = 31;
-    for (int i = 0; i < strlen(key); i++) {
-        sum = ((sum % mp->capacity) + (((int)key[i]) * factor) % mp->capacity) % mp->capacity;
-        factor = ((factor % __INT16_MAX__) * (31 % __INT16_MAX__)) % __INT16_MAX__;
-    }
-    bucketIndex = sum;
-    return bucketIndex;
-}
-
-void insert(struct hashMap* mp, const char* key, const char* value) {
-    int bucketIndex = hashFunction(mp, key);
-    struct node* newNode = (struct node*)malloc(sizeof(struct node));
-    setNode(newNode, key, value);
-
-    if (mp->arr[bucketIndex] == nullptr) {
-        mp->arr[bucketIndex] = newNode;
-    } else {
-        newNode->next = mp->arr[bucketIndex];
-        mp->arr[bucketIndex] = newNode;
-    }
-    return;
-}
-
-void deleteKey(struct hashMap* mp, const char* key) {
-    int bucketIndex = hashFunction(mp, key);
-    struct node* prevNode = nullptr;
-    struct node* currNode = mp->arr[bucketIndex];
-
-    while (currNode != nullptr) {
-        if (strcmp(key, currNode->key) == 0) {
-            if (currNode == mp->arr[bucketIndex]) {
-                mp->arr[bucketIndex] = currNode->next;
-            } else {
-                prevNode->next = currNode->next;
-            }
-            free(currNode);
-            break;
-        }
-        prevNode = currNode;
-        currNode = currNode->next;
-    }
-    return;
-}
-
-const char* search(struct hashMap* mp, const char* key) {
-    int bucketIndex = hashFunction(mp, key);
-    struct node* bucketHead = mp->arr[bucketIndex];
-
-    while (bucketHead != nullptr) {
-        if (strcmp(bucketHead->key, key) == 0) {
-            return bucketHead->value;
-        }
-        bucketHead = bucketHead->next;
+    // Generar todos los sufijos y almacenarlos con su índice original
+    for (int i = 0; i < n; i++) {
+        suffixes.push_back({ s.substr(i), i });
     }
 
-    return "Oops! No data found.";
+    // Ordenar los sufijos alfabéticamente
+    sort(suffixes.begin(), suffixes.end(), compareSuffixes);
+
+    // Extraer los índices de los sufijos ordenados
+    vector<int> suffixArray;
+    for (const auto& suffix : suffixes) {
+        suffixArray.push_back(suffix.second);
+    }
+
+    return suffixArray;
 }
 
-// Driver code
 int main() {
-    struct hashMap* mp = (struct hashMap*)malloc(sizeof(struct hashMap));
-    initializeHashMap(mp);
+    string input;
+    cout << "Ingrese el string: ";
+    getline(cin, input);
 
-    insert(mp, "Yogaholic", "Anjali");
-    insert(mp, "pluto14", "Vartika");
-    insert(mp, "elite_Programmer", "Manish");
-    insert(mp, "GFG", "GeeksforGeeks");
-    insert(mp, "decentBoy", "Mayank");
+    // Calcular el Suffix Array
+    vector<int> suffixArray = computeSuffixArray(input);
 
-    printf("%s\n", search(mp, "elite_Programmer"));
-    printf("%s\n", search(mp, "Yogaholic"));
-    printf("%s\n", search(mp, "pluto14"));
-    printf("%s\n", search(mp, "decentBoy"));
-    printf("%s\n", search(mp, "GFG"));
-
-    // Key is not inserted
-    printf("%s\n", search(mp, "randomKey"));
-
-    printf("\nAfter deletion:\n");
-    deleteKey(mp, "decentBoy");
-    printf("%s\n", search(mp, "decentBoy"));
-
-    // Free memory
-    for (int i = 0; i < mp->capacity; i++) {
-        struct node* current = mp->arr[i];
-        while (current != nullptr) {
-            struct node* temp = current;
-            current = current->next;
-            free(temp);
-        }
+    // Mostrar los índices de los sufijos ordenados
+    cout << "Suffix Array:" << endl;
+    for (int index : suffixArray) {
+        cout << index << endl;
     }
-    free(mp->arr);
-    free(mp);
 
     return 0;
 }
